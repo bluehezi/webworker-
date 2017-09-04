@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>WebWorker处理图像数据</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+        #image {
+            width: 600px;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <img id = 'image' src="./yuanbin.jpg" alt="">
+    <script>
+        let image = document.getElementById('image')
+    
+       function processImage () {
+           // 获取图片的宽高
+        let imgWidth = image.width,
+            imgHeight = image.height
+            // 创建canvas对象，并获得画布上下文环境
+        let canvas = document.createElement('canvas'),
+            context = canvas.getContext('2d')
+            // 设置canvas的宽高，为img标签的宽高
+        canvas.width = imgWidth
+        canvas.height = imgHeight
+        //  把图像绘制到画布
+        context.drawImage(image, 0, 0, imgWidth, imgHeight)
+
+        // 创建webwroker对象
+        let workerThread = new Worker('./worker.js')
+        // 监听message事件，等收到数据时，处理
+        workerThread.addEventListener('message', function (e) {
+            let imageData = e.data
+            context.putImageData(imageData, 0, 0)
+            document.body.appendChild(canvas)
+        })
+        // 向web worker线程发送canvas显示图像的原始数据，使线程启动
+        workerThread.postMessage(context.getImageData(0, 0, imgWidth, imgHeight))
+       }
+
+       // 等图片加载完，执行processImage函数
+       image.addEventListener('load', processImage, false)
+
+    </script>
+</body>
+</html>
